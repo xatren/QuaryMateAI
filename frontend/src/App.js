@@ -5,7 +5,7 @@ import WeatherPage from './pages/WeatherPage';
 import NewsPage from './pages/NewsPage';
 import StocksPage from './pages/StocksPage';
 import AppLayout from './AppLayout';
-//import './App.css';
+
 
 const App = () => {
     const [activeTab, setActiveTab] = useState('Chat');
@@ -28,6 +28,12 @@ const App = () => {
         }
         return "chat";
     };
+    const handleKeyPress = (event) => {
+        if (event.key === 'Enter') {
+            handleSend();  // Call handleSend when the Enter key is pressed
+        }
+    };
+    
 
     // Function to detect if the query is in Turkish
     const isTurkishQuery = (query) => {
@@ -165,7 +171,8 @@ const App = () => {
                 return <ChatPage messages={messages} />;
         }
     };
-
+   
+    
     return (
         <AppLayout
             activeTab={activeTab}
@@ -174,6 +181,7 @@ const App = () => {
             setInputValue={setInputValue}
             handleSend={handleSend}
             renderPage={renderPage}
+            handleKeyPress={handleKeyPress}
         />
     );
 };

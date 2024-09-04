@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPaperPlane, faCloudSun, faNewspaper, faChartLine, faComments } from '@fortawesome/free-solid-svg-icons';
 
 
-const AppLayout = ({ activeTab, setActiveTab, inputValue, setInputValue, handleSend, renderPage }) => {
+const AppLayout = ({ activeTab, handleKeyPress ,setActiveTab, inputValue, setInputValue, handleSend, renderPage }) => {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-6">
             <div className="w-full max-w-3xl bg-white rounded-lg shadow-lg p-6 flex flex-col">
@@ -34,10 +34,13 @@ const AppLayout = ({ activeTab, setActiveTab, inputValue, setInputValue, handleS
                     {renderPage()}
                 </div>
                 <div className="flex items-center mt-4">
+                    
+                    
                     <input 
                         type="text" 
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={handleKeyPress}  // Trigger handleSend on Enter key press
                         placeholder="Ask about weather, news, or stocks..." 
                         className="flex-1 p-2 border rounded-l-lg focus:outline-none"
                     />
@@ -47,6 +50,7 @@ const AppLayout = ({ activeTab, setActiveTab, inputValue, setInputValue, handleS
                     >
                         <FontAwesomeIcon icon={faPaperPlane} />
                     </button>
+
                 </div>
             </div>
         </div>
