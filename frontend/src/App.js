@@ -6,13 +6,13 @@ import NewsPage from './pages/NewsPage';
 import StocksPage from './pages/StocksPage';
 import AppLayout from './AppLayout';
 
-
 const App = () => {
     const [activeTab, setActiveTab] = useState('Chat');
     const [inputValue, setInputValue] = useState('');
     const [messages, setMessages] = useState([]);
     const [weatherData, setWeatherData] = useState(null);
     const [stockData, setStockData] = useState(null);
+    const [newsData, setNewsData] = useState(null);  // State to store fetched news data
     const [language, setLanguage] = useState('en');  // Track the detected language
 
     // Function to classify the query (weather, news, stocks, or chat)
@@ -20,7 +20,7 @@ const App = () => {
         if (query.toLowerCase().includes("weather") || query.toLowerCase().includes("hava")) {
             return "weather";
         }
-        if (query.toLowerCase().includes("news")) {
+        if (query.toLowerCase().includes("news") || query.toLowerCase().includes("haber")) {
             return "news";
         }
         if (query.toLowerCase().includes("stock") || query.toLowerCase().includes("hisse")) {
@@ -28,19 +28,18 @@ const App = () => {
         }
         return "chat";
     };
+
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
             handleSend();  // Call handleSend when the Enter key is pressed
         }
     };
-    
 
     // Function to detect if the query is in Turkish
     const isTurkishQuery = (query) => {
-        const turkishKeywords = ["hava", "sıcaklık", "nem", "rüzgar", "durumu", "bugün", "nasıl", "ne", "yapmalı", "fiyat", "hisse"];
+        const turkishKeywords = ["hava", "haber", "sıcaklık", "nem", "rüzgar", "durumu", "bugün", "nasıl", "fiyat", "hisse"];
         return turkishKeywords.some(keyword => query.toLowerCase().includes(keyword));
     };
-    
 
     // Function to extract the city name from the query
     const extractCityFromQuery = (query) => {
@@ -125,9 +124,29 @@ const App = () => {
             setMessages([...messages, { text: errorMessage, isUser: false }]);
         }
     };
-    
-    
-    
+
+    // Fetch news data
+    const fetchNewsData = async (query, isTurkish) => {
+        try {
+            const lang = isTurkish ? 'tr' : 'en';
+            const response = await axios.get('https://newsapi.org/v2/everything', {
+                params: {
+                    q: query,
+                    apiKey: process.env.REACT_APP_NEWS_API_KEY,
+                    language: lang,
+                    sortBy: 'publishedAt',
+                    pageSize: 5,
+                },
+            });
+
+            setNewsData(response.data.articles);
+            setActiveTab('News');
+        } catch (err) {
+            console.error("Failed to fetch news data:", err);
+            const errorMessage = isTurkish ? "Haberler alınamadı. Lütfen tekrar deneyin." : "Could not fetch news data. Please try again.";
+            setMessages([...messages, { text: errorMessage, isUser: false }]);
+        }
+    };
 
     // Handle sending a message
     const handleSend = async () => {
@@ -158,7 +177,7 @@ const App = () => {
                 }
                 setActiveTab('Stocks');
             } else if (label === "news") {
-                setActiveTab('News');
+                await fetchNewsData(inputValue, isTurkish);  // Fetch news with language preference
             } else {
                 setActiveTab('Chat');
             }
@@ -166,7 +185,6 @@ const App = () => {
             setInputValue('');
         }
     };
-    
 
     const renderPage = () => {
         switch (activeTab) {
@@ -175,16 +193,14 @@ const App = () => {
             case 'Weather':
                 return <WeatherPage weatherData={weatherData} language={language} />;
             case 'News':
-                return <NewsPage />;
+                return <NewsPage newsData={newsData} language={language} />;
             case 'Stocks':
                 return <StocksPage stockData={stockData} language={language} />;
             default:
                 return <ChatPage messages={messages} />;
         }
     };
-    
-   
-    
+
     return (
         <AppLayout
             activeTab={activeTab}

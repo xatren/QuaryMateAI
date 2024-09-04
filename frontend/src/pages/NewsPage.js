@@ -1,51 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React from 'react';
 
-const NewsPage = () => {
-    const [newsArticles, setNewsArticles] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+const NewsPage = ({ newsData, language }) => {
+    const labels = {
+        en: {
+            author: 'Author',
+            title: 'Title',
+            description: 'Description',
+            source: 'Source',
+            publishedAt: 'Published At',
+        },
+        tr: {
+            author: 'Yazar',
+            title: 'Başlık',
+            description: 'Açıklama',
+            source: 'Kaynak',
+            publishedAt: 'Yayın Tarihi',
+        }
+    };
 
-    useEffect(() => {
-        const fetchNews = async () => {
-            try {
-                const response = await axios.get('YOUR_NEWS_API_ENDPOINT', {
-                    params: {
-                        q: 'latest',
-                        apiKey: 'YOUR_NEWS_API_KEY',
-                        language: 'en',
-                    },
-                });
-                setNewsArticles(response.data.articles);
-            } catch (err) {
-                setError('Failed to fetch news.');
-            } finally {
-                setLoading(false);
-            }
-        };
+    const selectedLabels = labels[language];
 
-        fetchNews();
-    }, []);
-
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>{error}</div>;
+    // Handle no news data case
+    if (!newsData || newsData.length === 0) {
+        return <div>{language === 'tr' ? 'Haber bulunamadı.' : 'No news available.'}</div>;
+    }
 
     return (
-        <div className="news-page">
-            <h2 className="text-xl font-bold mb-4">Latest News</h2>
-            {newsArticles.length > 0 ? (
-                newsArticles.map((article, index) => (
-                    <div key={index} className="news-article mb-4">
-                        <h3 className="font-semibold">{article.title}</h3>
-                        <p>{article.description}</p>
-                        <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-blue-500">
-                            Read more
-                        </a>
-                    </div>
-                ))
-            ) : (
-                <p>No news articles found.</p>
-            )}
+        <div>
+            {newsData.map((article, index) => (
+                <div key={index} className="border-b mb-4 pb-4">
+                    <h2 className="text-xl font-bold">{selectedLabels.title}: {article.title}</h2>
+                    <p><strong>{selectedLabels.author}:</strong> {article.author || 'N/A'}</p>
+                    <p><strong>{selectedLabels.description}:</strong> {article.description || 'N/A'}</p>
+                    <p><strong>{selectedLabels.source}:</strong> {article.source.name}</p>
+                    <p><strong>{selectedLabels.publishedAt}:</strong> {new Date(article.publishedAt).toLocaleString()}</p>
+                    <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {language === 'tr' ? 'Tam haberi oku' : 'Read full article'}
+                    </a>
+                </div>
+            ))}
         </div>
     );
 };
