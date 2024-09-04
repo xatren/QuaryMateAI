@@ -37,9 +37,10 @@ const App = () => {
 
     // Function to detect if the query is in Turkish
     const isTurkishQuery = (query) => {
-        const turkishKeywords = ["hava", "sıcaklık", "nem", "rüzgar", "durumu", "bugün", "nasıl", "ne", "yapmalı"];
+        const turkishKeywords = ["hava", "sıcaklık", "nem", "rüzgar", "durumu", "bugün", "nasıl", "ne", "yapmalı", "fiyat", "hisse"];
         return turkishKeywords.some(keyword => query.toLowerCase().includes(keyword));
     };
+    
 
     // Function to extract the city name from the query
     const extractCityFromQuery = (query) => {
@@ -89,7 +90,7 @@ const App = () => {
     };
 
     // Fetch stock data
-    const fetchStockData = async (symbol) => {
+    const fetchStockData = async (symbol, isTurkish) => {
         try {
             const response = await axios.get('https://www.alphavantage.co/query', {
                 params: {
@@ -102,22 +103,29 @@ const App = () => {
                 },
             });
     
-            console.log("API Response:", response.data); // Log the API response
+            console.log("API Response:", response.data);
     
             // Check if stock data is valid
             if (!response.data || !response.data['Meta Data']) {
-                console.error("Invalid stock data or empty response:", response.data);
-                setMessages([...messages, { text: "Could not fetch stock data. Please try again.", isUser: false }]);
+                const errorMessage = isTurkish ? "Hisse senedi verileri alınamadı. Lütfen tekrar deneyin." : "Could not fetch stock data. Please try again.";
+                setMessages([...messages, { text: errorMessage, isUser: false }]);
                 return;
             }
     
             setStockData(response.data);
             setActiveTab('Stocks');
+            
+            // Display a success message in the appropriate language
+            const successMessage = isTurkish ? `${symbol} hisse senedi fiyatı başarıyla alındı.` : `The stock price of ${symbol} has been fetched successfully.`;
+            setMessages([...messages, { text: successMessage, isUser: false }]);
+    
         } catch (err) {
             console.error("Failed to fetch stock data:", err);
-            setMessages([...messages, { text: "Could not fetch stock data. Please try again.", isUser: false }]);
+            const errorMessage = isTurkish ? "Hisse senedi verileri alınamadı. Lütfen tekrar deneyin." : "Could not fetch stock data. Please try again.";
+            setMessages([...messages, { text: errorMessage, isUser: false }]);
         }
     };
+    
     
     
 
@@ -126,15 +134,17 @@ const App = () => {
         if (inputValue.trim()) {
             const newMessages = [...messages, { text: inputValue, isUser: true }];
             setMessages(newMessages);
-
+    
             const label = await classifyQuery(inputValue);
-            const isTurkish = isTurkishQuery(inputValue);
+            const isTurkish = isTurkishQuery(inputValue);  // Check if the query is in Turkish
+    
+            // Set language based on the detected query language
             setLanguage(isTurkish ? 'tr' : 'en');
-
+    
             if (label === "weather") {
                 const city = extractCityFromQuery(inputValue);
                 if (city) {
-                    await fetchWeather(city, isTurkish);
+                    await fetchWeather(city, isTurkish);  // Fetch weather with language preference
                 } else {
                     setMessages([...newMessages, { text: isTurkish ? "Lütfen bir şehir belirtin." : "Please specify a city.", isUser: false }]);
                 }
@@ -142,9 +152,9 @@ const App = () => {
             } else if (label === "stocks") {
                 const symbol = extractStockSymbol(inputValue);
                 if (symbol) {
-                    await fetchStockData(symbol);
+                    await fetchStockData(symbol, isTurkish);  // Fetch stock data with language preference
                 } else {
-                    setMessages([...newMessages, { text: "Please specify a stock symbol.", isUser: false }]);
+                    setMessages([...newMessages, { text: isTurkish ? "Lütfen bir hisse sembolü belirtin." : "Please specify a stock symbol.", isUser: false }]);
                 }
                 setActiveTab('Stocks');
             } else if (label === "news") {
@@ -152,10 +162,11 @@ const App = () => {
             } else {
                 setActiveTab('Chat');
             }
-
+    
             setInputValue('');
         }
     };
+    
 
     const renderPage = () => {
         switch (activeTab) {
@@ -166,11 +177,12 @@ const App = () => {
             case 'News':
                 return <NewsPage />;
             case 'Stocks':
-                return <StocksPage stockData={stockData} />;
+                return <StocksPage stockData={stockData} language={language} />;
             default:
                 return <ChatPage messages={messages} />;
         }
     };
+    
    
     
     return (
