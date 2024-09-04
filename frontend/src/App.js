@@ -12,10 +12,11 @@ const App = () => {
     const [inputValue, setInputValue] = useState('');
     const [messages, setMessages] = useState([]);
     const [weatherData, setWeatherData] = useState(null);
+    const [language, setLanguage] = useState('en');  // Track the detected language
 
+    // Function to classify the query (weather, news, stocks, or chat)
     const classifyQuery = async (query) => {
-        // Mock classification: If the query includes "weather", return "weather"
-        if (query.toLowerCase().includes("weather")) {
+        if (query.toLowerCase().includes("weather") || query.toLowerCase().includes("hava")) {
             return "weather";
         }
         if (query.toLowerCase().includes("news")) {
@@ -27,51 +28,85 @@ const App = () => {
         return "chat";
     };
 
-    const extractCityFromQuery = (query) => {
-        const words = query.split(" ");
-        const inIndex = words.indexOf("in");
-        if (inIndex !== -1 && inIndex < words.length - 1) {
-            return words[inIndex + 1];
-        }
-        return null;
+    // Function to detect if the query is in Turkish
+    const isTurkishQuery = (query) => {
+        const turkishKeywords = ["hava", "sıcaklık", "nem", "rüzgar", "durumu", "bugün", "nasıl", "ne", "yapmalı"];
+        return turkishKeywords.some(keyword => query.toLowerCase().includes(keyword));
     };
 
-    const fetchWeather = async (city) => {
+    // Function to extract the city name from the query
+    const extractCityFromQuery = (query) => {
+        // List of common weather-related keywords and question words that should be ignored
+        const ignoreKeywords = ["hava", "sıcaklık", "nem", "rüzgar", "durumu", "bugün", "nasıl", "ne", "yapmalı"];
+
+        const words = query.split(" ");
+        const inIndex = words.indexOf("in"); // If the query says "weather in city"
+        
+        // Check if the query includes "in" and a city afterward
+        if (inIndex !== -1 && inIndex < words.length - 1) {
+            const cityCandidate = words[inIndex + 1];
+            if (!ignoreKeywords.includes(cityCandidate.toLowerCase())) {
+                return cityCandidate;
+            }
+        }
+
+        // If "in" is not used, find a city by filtering out weather-related and question keywords
+        const cityWords = words
+            .filter(word => word.length > 2 && !ignoreKeywords.includes(word.toLowerCase()))
+            .map(word => word.replace(/da$|de$/, '')); // Remove Turkish suffixes like "da" or "de"
+
+        // Return the first valid word as the city, or null if no city is found
+        return cityWords.length > 0 ? cityWords[0] : null;
+    };
+
+    // Fetch weather data with language detection
+    const fetchWeather = async (city, isTurkish) => {
         try {
-            console.log("API Key:", process.env.REACT_APP_WEATHER_API_KEY); // Debugging: Check if the key is logged correctly
+            console.log("City detected:", city); // Debugging log for the city
+            const lang = isTurkish ? 'tr' : 'en';  // Set language based on the query
             const response = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
                 params: {
                     q: city,
-                    appid: process.env.REACT_APP_WEATHER_API_KEY, // Use the API key from .env
+                    appid: process.env.REACT_APP_WEATHER_API_KEY,  // Use the API key from .env
                     units: 'metric',
-                    lang: 'en'
+                    lang
                 },
             });
 
-            console.log('Weather API Response:', response.data); // Check the response data
+            console.log("Weather data response:", response.data); // Debugging log for weather data
 
             setWeatherData(response.data); // Update state with fetched data
-            setActiveTab('Weather'); // Switch to the Weather tab
+            setActiveTab('Weather');  // Switch to the Weather tab
+
         } catch (err) {
             console.error("Failed to fetch weather data:", err);
-            setMessages([...messages, { text: "Could not fetch weather data. Please try again.", isUser: false }]);
+            setMessages([...messages, { text: isTurkish ? "Hava durumu alınamadı. Lütfen tekrar deneyin." : "Could not fetch weather data. Please try again.", isUser: false }]);
         }
     };
 
+    // Handle sending a message and triggering actions
     const handleSend = async () => {
         if (inputValue.trim()) {
             const newMessages = [...messages, { text: inputValue, isUser: true }];
             setMessages(newMessages);
+
             const label = await classifyQuery(inputValue);
+            const isTurkish = isTurkishQuery(inputValue);
+
+            // Set language based on the detected query language
+            setLanguage(isTurkish ? 'tr' : 'en');
 
             if (label === "weather") {
-                const city = extractCityFromQuery(inputValue);  // Extract the city name
+                const city = extractCityFromQuery(inputValue);  // Extract city
+
+                // Handle case where no city is provided
                 if (city) {
-                    await fetchWeather(city); // Fetch the weather data
-                    setActiveTab('Weather');  // Switch to the Weather tab
+                    await fetchWeather(city, isTurkish);  // Fetch weather with language preference
                 } else {
-                    setMessages([...newMessages, { text: "Please specify a city.", isUser: false }]);
+                    setMessages([...newMessages, { text: isTurkish ? "Lütfen bir şehir belirtin." : "Please specify a city.", isUser: false }]);
                 }
+
+                setActiveTab('Weather');  // Switch to the Weather tab
             } else if (label === "news") {
                 setActiveTab('News');
             } else if (label === "stocks") {
@@ -84,12 +119,13 @@ const App = () => {
         }
     };
 
+    // Render the appropriate page based on the active tab
     const renderPage = () => {
         switch (activeTab) {
             case 'Chat':
                 return <ChatPage messages={messages} />;
             case 'Weather':
-                return <WeatherPage weatherData={weatherData} />;
+                return <WeatherPage weatherData={weatherData} language={language} />;
             case 'News':
                 return <NewsPage />;
             case 'Stocks':
