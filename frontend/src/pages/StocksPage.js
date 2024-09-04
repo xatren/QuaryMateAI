@@ -1,54 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React from 'react';
 
-const StocksPage = () => {
-    const [stockData, setStockData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+const StockPage = ({ stockData }) => {
+    if (!stockData || !stockData['Meta Data'] || !stockData['Time Series (5min)']) {
+        return <div>No stock data available. Please search for a stock symbol.</div>;
+    }
 
-    useEffect(() => {
-        const fetchStockData = async () => {
-            try {
-                const response = await axios.get('YOUR_STOCK_API_ENDPOINT', {
-                    params: {
-                        function: 'TIME_SERIES_INTRADAY',
-                        symbol: 'AAPL', // Example: Apple Inc.
-                        interval: '1min',
-                        apikey: 'YOUR_STOCK_API_KEY',
-                    },
-                });
-                setStockData(response.data['Time Series (1min)']);
-            } catch (err) {
-                setError('Failed to fetch stock data.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchStockData();
-    }, []);
-
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>{error}</div>;
+    const metaData = stockData['Meta Data'];
+    const timeSeries = stockData['Time Series (5min)'];
 
     return (
-        <div className="stocks-page">
-            <h2 className="text-xl font-bold mb-4">Stock Prices (AAPL)</h2>
-            {stockData ? (
-                <div className="stock-info">
-                    {Object.keys(stockData).slice(0, 5).map((time, index) => (
-                        <div key={index} className="mb-2">
-                            <p><strong>Time:</strong> {time}</p>
-                            <p><strong>Open:</strong> {stockData[time]['1. open']}</p>
-                            <p><strong>Close:</strong> {stockData[time]['4. close']}</p>
-                        </div>
+        <div className="stock-page">
+            <h2>Stock Information: {metaData['2. Symbol']}</h2>
+            <p><strong>Last Refreshed:</strong> {metaData['3. Last Refreshed']}</p>
+            <p><strong>Interval:</strong> {metaData['4. Interval']}</p>
+            <p><strong>Output Size:</strong> {metaData['5. Output Size']}</p>
+            <p><strong>Time Zone:</strong> {metaData['6. Time Zone']}</p>
+
+            <h3>Intraday Time Series (5min):</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Open</th>
+                        <th>High</th>
+                        <th>Low</th>
+                        <th>Close</th>
+                        <th>Volume</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {Object.keys(timeSeries).map((time) => (
+                        <tr key={time}>
+                            <td>{time}</td>
+                            <td>{timeSeries[time]['1. open']}</td>
+                            <td>{timeSeries[time]['2. high']}</td>
+                            <td>{timeSeries[time]['3. low']}</td>
+                            <td>{timeSeries[time]['4. close']}</td>
+                            <td>{timeSeries[time]['5. volume']}</td>
+                        </tr>
                     ))}
-                </div>
-            ) : (
-                <p>No stock data available.</p>
-            )}
+                </tbody>
+            </table>
         </div>
     );
 };
 
-export default StocksPage;
+export default StockPage;
