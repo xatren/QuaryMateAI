@@ -3,34 +3,44 @@
 Bu Yapay Zeka Asistanı projesi, **React.js**, **Tailwind CSS** ve backend'de **Node.js** kullanılarak inşa edilmiş dinamik bir web uygulamasıdır. Asistan, çeşitli API'lerle entegre olarak kullanıcılara hava durumu, hisse senedi fiyatları ve haberler hakkında gerçek zamanlı bilgi sağlar. Uygulama, kullanıcının sorgularını anlamak ve ilgili yanıtları sağlamak için özel bir doğal dil işleme (NLP) mantığı içerir. Asistan, kullanıcının girdisine göre Türkçe ve İngilizce dahil birden fazla dilde yanıt verebilir.
 
 ## Özellikler
+1. **Çok Dilli NLP Sorgu Sınıflandırma**: Kullanıcının sorgusunun dilini (Türkçe veya İngilizce) ve konusunu (hava durumu, hisse senedi, haberler veya genel sohbet) otomatik olarak algılar ve sınıflandırır.
 
-1. **NLP Sorgu Sınıflandırma**: Kullanıcının sorgusunun hava durumu, hisse senedi veya haberlerle ilgili olup olmadığını otomatik olarak algılar.
-2. **Çok Dilli Destek**: Kullanıcının sorgusunun diline göre Türkçe veya İngilizce yanıt verir.
-3. **Hava Durumu Entegrasyonu**: **OpenWeather API** kullanarak canlı hava durumu verilerini çeker ve görüntüler.
-4. **Hisse Senedi Fiyatı Entegrasyonu**: **Alpha Vantage API** kullanarak gerçek zamanlı hisse senedi fiyatlarını alır.
-5. **Haber Entegrasyonu**: **NewsAPI** kullanarak ilgili haber makalelerini gösterir.
-6. **Etkileşimli UI**: Kullanıcının girdisine göre sohbet, hava durumu, hisse senetleri ve haberler bölümleri arasında dinamik geçiş yapar.
-7. **Gerçek Zamanlı Grafikler**: Hisse senedi verileri gerçek zamanlı grafiklerle görselleştirilir.
-8. **Mobil Uyumlu**: Cihazlar arasında sorunsuz çalışmak üzere tasarlanmış responsive tasarım.
-9. **Özelleştirilebilir**: Yeni API'lerle veya ek özelliklerle kolayca entegre edilebilecek şekilde tasarlanmıştır.
+2. **API Entegrasyonları**: 
+   - Hava Durumu: OpenWeather API ile canlı veriler
+   - Hisse Senedi: Alpha Vantage API ile gerçek zamanlı fiyatlar
+   - Haberler: NewsAPI ile güncel makaleler
 
-## Nasıl Çalışır
+3. **Etkileşimli ve Dinamik UI**: 
+   - Kullanıcı girdisine göre sohbet, hava durumu, hisse senetleri ve haberler bölümleri arasında otomatik geçiş yapar
+   - Hisse senedi verileri için gerçek zamanlı grafikler sunar
+   - Mobil uyumlu, responsive tasarım
 
-1. **Doğal Dil Sınıflandırma**: Uygulama, kullanıcı sorgusunu hava durumu, haber, hisse senetleri veya genel sohbet olarak sınıflandırmak için özel bir NLP mantığı kullanır.
-2. **API İstekleri**: Sınıflandırıldıktan sonra, uygulama ilgili API'ye (OpenWeather, Alpha Vantage veya NewsAPI) istek gönderir.
-3. **Dil Algılama**: Asistan çok dilli sorguları (İngilizce ve Türkçe) destekler ve yanıtları buna göre ayarlar.
-4. **Dinamik Sayfa Yükleme**: Sınıflandırmaya bağlı olarak, uygulama dinamik olarak Hava Durumu, Hisse Senetleri ve Haberler sekmeleri arasında geçiş yapar.
+4. **Akıllı Yanıt Sistemi**:
+   - Sorgu sınıflandırmasına göre ilgili API'ye istek gönderir
+   - Kullanıcının diline (Türkçe veya İngilizce) uygun yanıtlar verir
 
+5. **Genişletilebilir Yapı**: 
+   - Yeni API'ler veya ek özelliklerle kolay entegrasyon için tasarlanmıştır
+   - Özelleştirilebilir ve ölçeklenebilir mimari
+
+6. **Veri Görselleştirme**: 
+   - Hava durumu bilgileri için görsel öğeler
+   - Hisse senedi verileri için gerçek zamanlı grafikler
+   - Haber makaleleri için özetler ve önizlemeler
+
+7. **Kullanıcı Deneyimi Odaklı**:
+   - Doğal dil etkileşimi sayesinde kolay kullanım
+   - Cihazlar arası tutarlı deneyim için responsive tasarım
+   - Dinamik içerik yükleme ile hızlı yanıt süresi
 
 ## İçindekiler
 
 - [Kurulum](#kurulum)
 - [Kullanım](#kullanım)
-- [Proje Yapısı](#proje-yapısı)
 - [Çevre Değişkenleri](#çevre-değişkenleri)
 - [API Entegrasyonu](#api-entegrasyonu)
   - [Hava Durumu API](#hava-durumu-api)
-  - [Hisse Senedi API](#hisse-senedi-api)
+  - [Hisse Senedi API](#hisse-api)
   - [Haber API](#haber-api)
 - [Katkıda Bulunma](#katkıda-bulunma)
 - [Lisans](#lisans)
