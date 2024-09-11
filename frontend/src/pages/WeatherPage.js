@@ -150,7 +150,10 @@ const WeatherPage = ({ weatherData, language, airPollutionData }) => {
     const prepareChartData = () => {
         if (!forecastData) return null;
 
-        const labels = forecastData.list.map(item => new Date(item.dt * 1000).toLocaleDateString());
+        const labels = forecastData.list.map(item => {
+            const date = new Date(item.dt * 1000);
+            return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        });
         const temperatures = forecastData.list.map(item => item.main.temp);
 
         return {
@@ -177,6 +180,15 @@ const WeatherPage = ({ weatherData, language, airPollutionData }) => {
                 text: language === 'tr' ? '5 Günlük Hava Durumu Tahmini' : '5 Day Weather Forecast',
             },
         },
+        scales: {
+            x: {
+                ticks: {
+                    maxTicksLimit: 8, // x ekseninde gösterilecek maksimum etiket sayısı
+                    maxRotation: 0,
+                    minRotation: 0
+                }
+            }
+        }
     };
 
     return (

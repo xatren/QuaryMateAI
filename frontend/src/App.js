@@ -145,16 +145,21 @@ const App = () => {
                     apiKey: process.env.REACT_APP_NEWS_API_KEY,
                     language: lang,
                     sortBy: 'publishedAt',
-                    pageSize: 5,
+                    pageSize: 10, // Daha fazla haber göstermek için artırıldı
                 },
             });
 
             setNewsData(response.data.articles);
             setActiveTab('News');
+            
+            const successMessage = isTurkish 
+                ? `"${query}" ile ilgili ${response.data.articles.length} haber bulundu.` 
+                : `Found ${response.data.articles.length} news articles related to "${query}".`;
+            setMessages(prevMessages => [...prevMessages, { text: successMessage, isUser: false }]);
         } catch (err) {
             console.error("Failed to fetch news data:", err);
             const errorMessage = isTurkish ? "Haberler alınamadı. Lütfen tekrar deneyin." : "Could not fetch news data. Please try again.";
-            setMessages([...messages, { text: errorMessage, isUser: false }]);
+            setMessages(prevMessages => [...prevMessages, { text: errorMessage, isUser: false }]);
         }
     };
 
@@ -168,26 +173,32 @@ const App = () => {
     
             setLanguage(isTurkish ? 'tr' : 'en');
     
-            if (label === "weather") {
-                const city = extractCityFromQuery(inputValue);
-                if (city) {
-                    await fetchWeather(city, isTurkish);
-                } else {
-                    setMessages([...newMessages, { text: isTurkish ? "Lütfen bir şehir belirtin." : "Please specify a city.", isUser: false }]);
-                }
-                setActiveTab('Weather');
-            } else if (label === "stocks") {
-                const symbol = extractStockSymbol(inputValue);
-                if (symbol) {
-                    await fetchStockData(symbol, isTurkish);
-                } else {
-                    setMessages([...newMessages, { text: isTurkish ? "Lütfen bir hisse sembolü belirtin." : "Please specify a stock symbol.", isUser: false }]);
-                }
-                setActiveTab('Stocks');
-            } else if (label === "news") {
-                await fetchNewsData(inputValue, isTurkish);
-            } else {
-                setActiveTab('Chat');
+            switch (label) {
+                case "weather":
+                    const city = extractCityFromQuery(inputValue);
+                    if (city) {
+                        await fetchWeather(city, isTurkish);
+                    } else {
+                        setMessages([...newMessages, { text: isTurkish ? "Lütfen bir şehir belirtin." : "Please specify a city.", isUser: false }]);
+                    }
+                    setActiveTab('Weather');
+                    break;
+                case "stocks":
+                    const symbol = extractStockSymbol(inputValue);
+                    if (symbol) {
+                        await fetchStockData(symbol, isTurkish);
+                    } else {
+                        setMessages([...newMessages, { text: isTurkish ? "Lütfen bir hisse sembolü belirtin." : "Please specify a stock symbol.", isUser: false }]);
+                    }
+                    setActiveTab('Stocks');
+                    break;
+                case "news":
+                    await fetchNewsData(inputValue, isTurkish);
+                    break;
+                default:
+                    setActiveTab('Chat');
+                    // Burada chatbot yanıtı eklenebilir
+                    break;
             }
     
             setInputValue('');
