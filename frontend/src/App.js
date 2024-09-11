@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import axios from 'axios'; // Axios'u import ettik
 import ChatPage from './pages/ChatPage';
 import WeatherPage from './pages/WeatherPage';
 import NewsPage from './pages/NewsPage';
 import StocksPage from './pages/StocksPage';
 import AppLayout from './AppLayout';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
 const App = () => {
     const [activeTab, setActiveTab] = useState('Chat');
@@ -145,21 +148,16 @@ const App = () => {
                     apiKey: process.env.REACT_APP_NEWS_API_KEY,
                     language: lang,
                     sortBy: 'publishedAt',
-                    pageSize: 10, // Daha fazla haber göstermek için artırıldı
+                    pageSize: 5,
                 },
             });
 
             setNewsData(response.data.articles);
             setActiveTab('News');
-            
-            const successMessage = isTurkish 
-                ? `"${query}" ile ilgili ${response.data.articles.length} haber bulundu.` 
-                : `Found ${response.data.articles.length} news articles related to "${query}".`;
-            setMessages(prevMessages => [...prevMessages, { text: successMessage, isUser: false }]);
         } catch (err) {
             console.error("Failed to fetch news data:", err);
             const errorMessage = isTurkish ? "Haberler alınamadı. Lütfen tekrar deneyin." : "Could not fetch news data. Please try again.";
-            setMessages(prevMessages => [...prevMessages, { text: errorMessage, isUser: false }]);
+            setMessages([...messages, { text: errorMessage, isUser: false }]);
         }
     };
 
@@ -173,32 +171,26 @@ const App = () => {
     
             setLanguage(isTurkish ? 'tr' : 'en');
     
-            switch (label) {
-                case "weather":
-                    const city = extractCityFromQuery(inputValue);
-                    if (city) {
-                        await fetchWeather(city, isTurkish);
-                    } else {
-                        setMessages([...newMessages, { text: isTurkish ? "Lütfen bir şehir belirtin." : "Please specify a city.", isUser: false }]);
-                    }
-                    setActiveTab('Weather');
-                    break;
-                case "stocks":
-                    const symbol = extractStockSymbol(inputValue);
-                    if (symbol) {
-                        await fetchStockData(symbol, isTurkish);
-                    } else {
-                        setMessages([...newMessages, { text: isTurkish ? "Lütfen bir hisse sembolü belirtin." : "Please specify a stock symbol.", isUser: false }]);
-                    }
-                    setActiveTab('Stocks');
-                    break;
-                case "news":
-                    await fetchNewsData(inputValue, isTurkish);
-                    break;
-                default:
-                    setActiveTab('Chat');
-                    // Burada chatbot yanıtı eklenebilir
-                    break;
+            if (label === "weather") {
+                const city = extractCityFromQuery(inputValue);
+                if (city) {
+                    await fetchWeather(city, isTurkish);
+                } else {
+                    setMessages([...newMessages, { text: isTurkish ? "Lütfen bir şehir belirtin." : "Please specify a city.", isUser: false }]);
+                }
+                setActiveTab('Weather');
+            } else if (label === "stocks") {
+                const symbol = extractStockSymbol(inputValue);
+                if (symbol) {
+                    await fetchStockData(symbol, isTurkish);
+                } else {
+                    setMessages([...newMessages, { text: isTurkish ? "Lütfen bir hisse sembolü belirtin." : "Please specify a stock symbol.", isUser: false }]);
+                }
+                setActiveTab('Stocks');
+            } else if (label === "news") {
+                await fetchNewsData(inputValue, isTurkish);
+            } else {
+                setActiveTab('Chat');
             }
     
             setInputValue('');
@@ -221,15 +213,13 @@ const App = () => {
     };
 
     return (
-        <AppLayout
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-            handleSend={handleSend}
-            renderPage={renderPage}
-            handleKeyPress={handleKeyPress}
-        />
+        <Router>
+            <Routes>
+                <Route path="/" element={<AppLayout activeTab={activeTab} setActiveTab={setActiveTab} inputValue={inputValue} setInputValue={setInputValue} handleSend={handleSend} renderPage={renderPage} handleKeyPress={handleKeyPress} />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+            </Routes>
+        </Router>
     );
 };
 

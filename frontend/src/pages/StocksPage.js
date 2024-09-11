@@ -85,9 +85,14 @@ const StockPage = ({ stockData, language }) => {
         }
     };
 
+    const stockPrice = stockPrices.length > 0 ? stockPrices[stockPrices.length - 1] : null; // Get the last stock price
+
     return (
-        <div>
-            <h2>{`${selectedLabels.symbol}: ${metaData['2. Symbol']}`}</h2>
+        <div>  
+            {stockPrice !== null && (
+                <h1 style={{ fontWeight: 'bold' }}>{language === 'tr' ? `Hisse Senedi Fiyatı: ${stockPrice} $` : `Stock Price: ${stockPrice} $`}</h1> // Dolar sembolü eklendi ve kalın yapıldı
+            )}
+            <p><strong>{selectedLabels.symbol}:</strong> {metaData['2. Symbol']}</p>
             <p><strong>{selectedLabels.lastRefreshed}:</strong> {metaData['3. Last Refreshed']}</p>
             <p><strong>{selectedLabels.interval}:</strong> {metaData['4. Interval']}</p>
             <p><strong>{selectedLabels.outputSize}:</strong> {metaData['5. Output Size']}</p>
