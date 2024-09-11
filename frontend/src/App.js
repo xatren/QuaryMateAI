@@ -12,10 +12,10 @@ const App = () => {
     const [messages, setMessages] = useState([]);
     const [weatherData, setWeatherData] = useState(null);
     const [stockData, setStockData] = useState(null);
-    const [newsData, setNewsData] = useState(null);  // State to store fetched news data
-    const [language, setLanguage] = useState('en');  // Track the detected language
+    const [newsData, setNewsData] = useState(null);
+    const [language, setLanguage] = useState('en');
+    const [airPollutionData, setAirPollutionData] = useState(null);
 
-    // Function to classify the query (weather, news, stocks, or chat)
     const classifyQuery = async (query) => {
         if (query.toLowerCase().includes("weather") || query.toLowerCase().includes("hava")) {
             return "weather";
@@ -31,17 +31,15 @@ const App = () => {
 
     const handleKeyPress = (event) => {
         if (event.key === 'Enter') {
-            handleSend();  // Call handleSend when the Enter key is pressed
+            handleSend();
         }
     };
 
-    // Function to detect if the query is in Turkish
     const isTurkishQuery = (query) => {
         const turkishKeywords = ["hava", "haber", "sıcaklık", "nem", "rüzgar", "durumu", "bugün", "nasıl", "fiyat", "hisse"];
         return turkishKeywords.some(keyword => query.toLowerCase().includes(keyword));
     };
 
-    // Function to extract the city name from the query
     const extractCityFromQuery = (query) => {
         const ignoreKeywords = ["hava", "sıcaklık", "nem", "rüzgar", "durumu", "bugün", "nasıl", "ne", "yapmalı"];
         const words = query.split(" ");
@@ -61,13 +59,26 @@ const App = () => {
         return cityWords.length > 0 ? cityWords[0] : null;
     };
 
-    // Function to extract stock symbol from the query
     const extractStockSymbol = (query) => {
         const words = query.split(" ");
         return words.length > 0 ? words[words.length - 1].toUpperCase() : null;
     };
 
-    // Fetch weather data
+    const fetchAirPollution = async (lat, lon) => {
+        try {
+            const response = await axios.get('https://api.openweathermap.org/data/2.5/air_pollution', {
+                params: {
+                    lat,
+                    lon,
+                    appid: process.env.REACT_APP_WEATHER_API_KEY
+                }
+            });
+            setAirPollutionData(response.data);
+        } catch (err) {
+            console.error("Hava kirliliği verileri alınamadı:", err);
+        }
+    };
+
     const fetchWeather = async (city, isTurkish) => {
         try {
             const lang = isTurkish ? 'tr' : 'en';
@@ -81,6 +92,9 @@ const App = () => {
             });
 
             setWeatherData(response.data);
+            if (response.data.coord) {
+                await fetchAirPollution(response.data.coord.lat, response.data.coord.lon);
+            }
             setActiveTab('Weather');
         } catch (err) {
             console.error("Failed to fetch weather data:", err);
@@ -88,7 +102,6 @@ const App = () => {
         }
     };
 
-    // Fetch stock data
     const fetchStockData = async (symbol, isTurkish) => {
         try {
             const response = await axios.get('https://www.alphavantage.co/query', {
@@ -104,7 +117,6 @@ const App = () => {
     
             console.log("API Response:", response.data);
     
-            // Check if stock data is valid
             if (!response.data || !response.data['Meta Data']) {
                 const errorMessage = isTurkish ? "Hisse senedi verileri alınamadı. Lütfen tekrar deneyin." : "Could not fetch stock data. Please try again.";
                 setMessages([...messages, { text: errorMessage, isUser: false }]);
@@ -114,7 +126,6 @@ const App = () => {
             setStockData(response.data);
             setActiveTab('Stocks');
             
-            // Display a success message in the appropriate language
             const successMessage = isTurkish ? `${symbol} hisse senedi fiyatı başarıyla alındı.` : `The stock price of ${symbol} has been fetched successfully.`;
             setMessages([...messages, { text: successMessage, isUser: false }]);
     
@@ -125,7 +136,6 @@ const App = () => {
         }
     };
 
-    // Fetch news data
     const fetchNewsData = async (query, isTurkish) => {
         try {
             const lang = isTurkish ? 'tr' : 'en';
@@ -148,22 +158,20 @@ const App = () => {
         }
     };
 
-    // Handle sending a message
     const handleSend = async () => {
         if (inputValue.trim()) {
             const newMessages = [...messages, { text: inputValue, isUser: true }];
             setMessages(newMessages);
     
             const label = await classifyQuery(inputValue);
-            const isTurkish = isTurkishQuery(inputValue);  // Check if the query is in Turkish
+            const isTurkish = isTurkishQuery(inputValue);
     
-            // Set language based on the detected query language
             setLanguage(isTurkish ? 'tr' : 'en');
     
             if (label === "weather") {
                 const city = extractCityFromQuery(inputValue);
                 if (city) {
-                    await fetchWeather(city, isTurkish);  // Fetch weather with language preference
+                    await fetchWeather(city, isTurkish);
                 } else {
                     setMessages([...newMessages, { text: isTurkish ? "Lütfen bir şehir belirtin." : "Please specify a city.", isUser: false }]);
                 }
@@ -171,13 +179,13 @@ const App = () => {
             } else if (label === "stocks") {
                 const symbol = extractStockSymbol(inputValue);
                 if (symbol) {
-                    await fetchStockData(symbol, isTurkish);  // Fetch stock data with language preference
+                    await fetchStockData(symbol, isTurkish);
                 } else {
                     setMessages([...newMessages, { text: isTurkish ? "Lütfen bir hisse sembolü belirtin." : "Please specify a stock symbol.", isUser: false }]);
                 }
                 setActiveTab('Stocks');
             } else if (label === "news") {
-                await fetchNewsData(inputValue, isTurkish);  // Fetch news with language preference
+                await fetchNewsData(inputValue, isTurkish);
             } else {
                 setActiveTab('Chat');
             }
@@ -191,7 +199,7 @@ const App = () => {
             case 'Chat':
                 return <ChatPage messages={messages} />;
             case 'Weather':
-                return <WeatherPage weatherData={weatherData} language={language} />;
+                return <WeatherPage weatherData={weatherData} language={language} airPollutionData={airPollutionData} />;
             case 'News':
                 return <NewsPage newsData={newsData} language={language} />;
             case 'Stocks':
